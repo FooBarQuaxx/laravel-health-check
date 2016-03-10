@@ -1,14 +1,18 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
+
+namespace NpmWeb\LaravelHealthCheck\Checks;
 
 use Exception;
 use Mail;
 
-class MailHealthCheck extends AbstractHealthCheck {
+class MailHealthCheck extends AbstractHealthCheck
+{
 
     protected $emailAddr;
     protected $method;
 
-    public function configure( $config = null ) {
+    public function configure( $config = null )
+    {
         \Log::debug(__METHOD__.'() '.print_r($config,true));
         parent::configure($config);
         $this->emailAddr = $config['email'];
@@ -19,11 +23,13 @@ class MailHealthCheck extends AbstractHealthCheck {
         }
     }
 
-    public function getType() {
+    public function getType()
+    {
         return 'mail';
     }
 
-    public function check() {
+    public function check()
+    {
         try {
             $method = $this->method;
             $email = $this->emailAddr;

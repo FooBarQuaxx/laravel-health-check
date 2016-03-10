@@ -1,6 +1,9 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
 
-interface HealthCheckInterface {
+namespace NpmWeb\LaravelHealthCheck\Checks;
+
+interface HealthCheckInterface
+{
 
     public function getName();
 

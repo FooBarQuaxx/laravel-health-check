@@ -1,4 +1,6 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
+
+namespace NpmWeb\LaravelHealthCheck\Checks;
 
 use File;
 
@@ -20,19 +22,23 @@ use File;
  *   ...
  * ]
  */
-class CronHealthCheck implements HealthCheckInterface {
+class CronHealthCheck implements HealthCheckInterface
+{
 
     protected $cronFiles;
 
-    public function __construct( $cronFiles ) {
+    public function __construct( $cronFiles )
+    {
         $this->cronFiles = $cronFiles;
     }
 
-    public function getName() {
+    public function getName()
+    {
         return 'cron';
     }
 
-    public function check() {
+    public function check()
+    {
         $success = true;
         foreach( $this->cronFiles as $filename => $patterns ) {
             if( !$this->checkCron($filename, $patterns) ) {
@@ -42,7 +48,8 @@ class CronHealthCheck implements HealthCheckInterface {
         return $success;
     }
 
-    protected function checkCron($filename, $patterns) {
+    protected function checkCron($filename, $patterns)
+    {
         try {
             $contents = File::get($filename);
             if( is_array($patterns) ) {
@@ -60,7 +67,8 @@ class CronHealthCheck implements HealthCheckInterface {
         }
     }
 
-    protected function checkCronPattern($contents, $pattern) {
+    protected function checkCronPattern($contents, $pattern)
+    {
         return false !== strpos($contents, $pattern);
     }
 }

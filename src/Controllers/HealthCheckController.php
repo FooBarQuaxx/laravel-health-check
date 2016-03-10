@@ -1,24 +1,24 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Controllers;
+<?php
 
-use App;
+namespace NpmWeb\LaravelHealthCheck\Controllers;
+
+use Log;
 use Illuminate\Routing\Controller;
 use Response;
 
-class HealthCheckController extends Controller {
+class HealthCheckController extends Controller
+{
 
     protected $healthChecks;
 
-    public function __construct() {
-        $this->healthChecks = App::make('health-checks');
+    public function __construct()
+    {
+        $this->healthChecks = app('health-checks');
     }
 
     public function index()
     {
-        $checkNames = array_map( function($check) {
-             \Log::debug(__METHOD__.':: got another health-check! ['. $check->getName().']');
-            return $check->getName();
-        }, $this->healthChecks );
-
+        $checkNames = array_map( function($check) { return $check->getName(); }, $this->healthChecks->getChecks() );
         return Response::json([
             'status' => 'success',
             'checks' => $checkNames,
@@ -27,19 +27,10 @@ class HealthCheckController extends Controller {
 
     public function show($checkName)
     {
-        $check = $this->getHealthCheckByName($checkName);
-        $result = $check->check();
+        $result = $this->healthChecks($checkName);
         return Response::json([
             'status' => $result,
         ]);
     }
 
-    protected function getHealthCheckByName($name) {
-        foreach( $this->healthChecks as $check ) {
-            if( $name == $check->getName() ) {
-                return $check;
-            }
-        }
-        return null;
-    }
 }

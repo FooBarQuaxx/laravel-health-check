@@ -1,12 +1,17 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
 
-class FrameworkHealthCheck extends AbstractHealthCheck {
+namespace NpmWeb\LaravelHealthCheck\Checks;
 
-    public function getType() {
+class FrameworkHealthCheck extends AbstractHealthCheck
+{
+
+    public function getType()
+    {
         return 'framework';
     }
 
-    public function check() {
+    public function check()
+    {
         return true; // if we get here, the framework is up
     }
 

@@ -1,10 +1,12 @@
-<?php namespace NpmWeb\LaravelHealthCheck;
+<?php
+
+namespace NpmWeb\LaravelHealthCheck;
 
 use Illuminate\Support\ServiceProvider;
 use Log;
-//use Illuminate\Routing\Router;
 
-class LaravelHealthCheckServiceProvider extends ServiceProvider {
+class LaravelHealthCheckServiceProvider extends ServiceProvider
+{
 
     /**
      * Indicates if loading of the provider is deferred.
@@ -38,15 +40,21 @@ class LaravelHealthCheckServiceProvider extends ServiceProvider {
         $this->loadViewsFrom(__DIR__.'../views', 'laravel-health-check');
         $this->mergeConfigFrom( $this->configFilePath, 'laravel-health-check' );
 
-        \Route::resource(
-            'monitor/health',
-            'NpmWeb\LaravelHealthCheck\Controllers\HealthCheckController',
-            ['only' => ['index','show']]
-        );
+        $this->bootRoutes($this->app['router'], 'monitor/health'); // TODO: make prefix configurable
 
-        $this->app->bind('health-checks', function($app) {
-            $manager = new HealthCheckManager($app);
-            return $manager->configuredChecks();
+        $this->app->singleton('health-checks', function($app) {
+            return new HealthCheckManager($app);
+        });
+    }
+
+    protected function bootRoutes($router, $prefix)
+    {
+        $router->group(['prefix' => $prefix], function($router) {
+            $router->get('',
+                ['uses' => 'NpmWeb\LaravelHealthCheck\Controllers\HealthCheckController@index', 'as' => 'health_check.index']);
+
+            $router->get('{check}',
+                ['uses' => 'NpmWeb\LaravelHealthCheck\Controllers\HealthCheckController@show', , 'as' => 'health_check.show']);
         });
     }
 
@@ -57,7 +65,7 @@ class LaravelHealthCheckServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-        // do nothing
+        //
     }
 
 }

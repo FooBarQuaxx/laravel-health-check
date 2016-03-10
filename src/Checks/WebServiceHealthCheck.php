@@ -1,26 +1,38 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
+
+namespace NpmWeb\LaravelHealthCheck\Checks;
 
 use GuzzleHttp\Client as HttpClient;
+use Log;
+use Exception;
 
-class WebServiceHealthCheck extends AbstractHealthCheck {
+class WebServiceHealthCheck extends AbstractHealthCheck
+{
 
-    public function getType() {
+    public function getType()
+    {
         return 'webservice';
     }
 
-    public function check() {
+    protected function responseIsSuccess($response)
+    {
+        return $response->getStatusCode() < 400 && !empty($response->getBody());
+    }
+
+    public function check()
+    {
         try {
             $httpClient = new HttpClient();
-            \Log::debug(__METHOD__.':: checking URL '.$this->config['url']);
+            Log::debug(__METHOD__.':: checking URL '.$this->config['url']);
             $response = $httpClient->get($this->config['url']);
-            if (array_key_exists('check', $this->config)) {
-                return $this->config['check']->__invoke($response);
+            if ($handler = array_get('check', $this->config) && is_callable($hander)) {
+                return $handler($response);
             } else {
                 // by default just check that the response is not empty
-                return !empty($response->getBody());
+                return $this->responseIsSuccess($response);
             }
-        } catch( \Exception $e ) {
-            \Log::error('Exception doing web service check: '.$e->getMessage());
+        } catch( Exception $e ) {
+            Log::error('Exception doing web service check: '.$e->getMessage());
             return false;
         }
     }

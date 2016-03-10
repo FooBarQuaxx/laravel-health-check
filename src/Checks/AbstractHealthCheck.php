@@ -1,6 +1,9 @@
-<?php namespace NpmWeb\LaravelHealthCheck\Checks;
+<?php
 
-abstract class AbstractHealthCheck implements HealthCheckInterface {
+namespace NpmWeb\LaravelHealthCheck\Checks;
+
+abstract class AbstractHealthCheck implements HealthCheckInterface
+{
 
     protected $instanceName = 'default';
     protected $config;
@@ -9,19 +12,23 @@ abstract class AbstractHealthCheck implements HealthCheckInterface {
      * only way to pass in the configuration easily for multiple instances
      * @param $config  mixed configuration specific to the provider
      */
-    public function configure( $config ) {
+    public function configure( $config )
+    {
         $this->config = $config;
     }
 
-    public function getInstanceName() {
+    public function getInstanceName()
+    {
         return $this->instanceName;
     }
 
-    public function setInstanceName( $name ) {
+    public function setInstanceName( $name )
+    {
         return $this->instanceName = $name;
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->getType() . (
             ( $this->instanceName == 'default' ) ? '' : '.' . $this->instanceName
         );

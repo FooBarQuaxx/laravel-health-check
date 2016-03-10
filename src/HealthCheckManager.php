@@ -1,15 +1,12 @@
-<?php namespace NpmWeb\LaravelHealthCheck;
+<?php
+
+namespace NpmWeb\LaravelHealthCheck;
 
 use Illuminate\Support\Manager;
+use Exception;
 
-use NpmWeb\LaravelHealthCheck\Checks\DatabaseHealthCheck;
-use NpmWeb\LaravelHealthCheck\Checks\FilesystemHealthCheck;
-use NpmWeb\LaravelHealthCheck\Checks\FlysystemHealthCheck;
-use NpmWeb\LaravelHealthCheck\Checks\FrameworkHealthCheck;
-use NpmWeb\LaravelHealthCheck\Checks\MailHealthCheck;
-use NpmWeb\LaravelHealthCheck\Checks\WebServiceHealthCheck;
-
-class HealthCheckManager extends Manager {
+class HealthCheckManager extends Manager
+{
 
     static $packageName = 'laravel-health-check';
     private $config;
@@ -32,15 +29,16 @@ class HealthCheckManager extends Manager {
      *
      * @return array of HealthCheckInterface instances
      */
-    public function configuredChecks() {
-        if ($this->checks === null) {
+    protected function configureChecks()
+    {
+        if (is_null($this->checks)) {
             $this->checks = [];
             foreach( $this->config as $driver => $checkConfig ) {
                 // check if multiple or just one
                 if (is_array($checkConfig)) {
                     foreach( $checkConfig as $key => $config ) {
                         $instance = $this->createInstance( $driver, $config );
-                        $instance->setInstanceName(is_string($key)?$key:$config);
+                        $instance->setInstanceName(is_string($key) ? $key : $config);
                         $this->checks[] = $instance;
                     }
                 } else {
@@ -49,7 +47,33 @@ class HealthCheckManager extends Manager {
                 }
             }
         }
-        return $this->checks;
+    }
+
+    protected function isClassIntantiable($class)
+    {
+        try {
+            $reflectionClass = new \ReflectionClass($class);
+            return $reflectionClass->IsInstantiable();
+        } catch(Exception $e) {
+            return false;
+        }
+    }
+
+    protected function createDriver($driver)
+    {
+        $namespace = 'NpmWeb\LaravelHealthCheck\Checks';
+        $class = $namespace . '\\' . ucfirst($driver).'HealthCheck';
+
+        // We'll check to see if a creator method exists for the given driver. If not we
+        // will check for a custom driver creator, which allows developers to create
+        // drivers using their own customized driver creator Closure to create it.
+        if (isset($this->customCreators[$driver])) {
+            return $this->callCustomCreator($driver);
+        } elseif (class_exists($class) && $this->isClassIntantiable($class)) {
+            return $this->app->make($class);
+        }
+
+        throw new InvalidArgumentException("Driver [$driver] not supported.");
     }
 
     /**
@@ -59,9 +83,9 @@ class HealthCheckManager extends Manager {
      * @param  mixed   $config
      * @return mixed
      */
-    public function createInstance($driver, $config = false)
+    public function createInstance($driver, $config = null)
     {
-        // use createDriver() because driver() only creates on instance
+        // use createDriver() because driver() only creates one instance
         $reference = $this->createDriver($driver);
 
         // any other setup needed
@@ -71,67 +95,6 @@ class HealthCheckManager extends Manager {
 
         return $reference;
     }
-
-    /**
-     * Create an instance of the database driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createDatabaseDriver()
-    {
-        return new DatabaseHealthCheck;
-    }
-
-    /**
-     * Create an instance of the filesystem driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createFilesystemDriver()
-    {
-        return new FilesystemHealthCheck;
-    }
-
-    /**
-     * Create an instance of the flysystem driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createFlysystemDriver()
-    {
-        return new FlysystemHealthCheck;
-    }
-
-    /**
-     * Create an instance of the framework driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createFrameworkDriver()
-    {
-        return new FrameworkHealthCheck;
-    }
-
-    /**
-     * Create an instance of the mail queue driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createMailDriver()
-    {
-        return new MailHealthCheck;
-    }
-
-    /**
-     * Create an instance of the web service driver.
-     *
-     * @return \NpmWeb\LaravelHealthCheck\Checks\HealthCheckInterface
-     */
-    public function createWebserviceDriver()
-    {
-        return new WebServiceHealthCheck;
-    }
-
 
     /**
      * Get the default authentication driver name.
@@ -155,4 +118,46 @@ class HealthCheckManager extends Manager {
         $this->app['config']->set(self::$packageName.'::driver', $name);
     }
 
+    public function getChecks()
+    {
+        if(is_null($this->checks)) {
+            $this->configureChecks();
+        }
+        return $this->checks;
+    }
+
+    public function getHealthCheckByName($name)
+    {
+        foreach( $this->getChecks() as $check ) {
+            if( $name == $check->getName() ) {
+                return $check;
+            }
+        }
+        return null;
+    }
+
+    public function checkAll()
+    {
+        $res = [];
+        foreach ($this->getChecks() as $check) {
+            $res[$check->getName()] = $check->check(); 
+        }
+        return $res;
+    }
+
+    public function checkOneByName($checkName)
+    {
+        $check = $this->getHealthCheckByName($checkName);
+
+        if(!$check) {
+            throw new InvalidArgumentException("Driver [$checkName] not supported.");
+        }
+
+        return $check->check();
+    }
+
+    public function __invoke($checkName=null)
+    {
+        return $checkName ? $this->checkOneByName($checkName) : $this->checkAll();
+    }
 }
