@@ -3,16 +3,10 @@
 namespace NpmWeb\LaravelHealthCheck\Checks;
 
 use DB;
-use Log
 use Exception;
 
 class DatabaseHealthCheck extends AbstractHealthCheck
 {
-
-    public function getType() 
-    {
-        return 'database';
-    }
 
     public function check() 
     {
@@ -23,7 +17,6 @@ class DatabaseHealthCheck extends AbstractHealthCheck
                 return false != DB::connection( $this->instanceName )->select('SELECT 1');
             }
         } catch( Exception $e ) {
-            Log::error('Exception doing db check: '.$e->getMessage());
             return false;
         }
     }

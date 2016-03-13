@@ -6,13 +6,8 @@ use Exception;
 use Cache;
 use Illuminate\Support\Str;
 
-class CacheHealthCheck implements extends AbstractHealthCheck
+class CacheHealthCheck extends AbstractHealthCheck
 {
-    public function getType()
-    {
-        return 'cache';
-    }
-
     public function configure($config=null)
     {
         parent::configure($config);

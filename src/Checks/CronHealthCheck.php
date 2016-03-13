@@ -32,11 +32,6 @@ class CronHealthCheck implements HealthCheckInterface
         $this->cronFiles = $cronFiles;
     }
 
-    public function getName()
-    {
-        return 'cron';
-    }
-
     public function check()
     {
         $success = true;

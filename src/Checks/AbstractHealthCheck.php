@@ -7,7 +7,21 @@ abstract class AbstractHealthCheck implements HealthCheckInterface
 
     protected $instanceName = 'default';
     protected $config;
+    protected $type = null;
 
+    public function getType()
+    {
+        if($this->type) {
+            return $this->type;
+        }
+
+        $shortname = (new \ReflectionClass($this))->getShortName();
+        $pattern = '/^(?P<type>\w+)HealthCheck$/';
+        if(preg_match($pattern, $shortname, $matches)) {
+            return strtolower(array_get($matches, 'type'));
+        }
+        return null;
+    }
     /**
      * only way to pass in the configuration easily for multiple instances
      * @param $config  mixed configuration specific to the provider

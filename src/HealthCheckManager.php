@@ -33,11 +33,11 @@ class HealthCheckManager extends Manager
     {
         if (is_null($this->checks)) {
             $this->checks = [];
-            foreach( $this->config as $driver => $checkConfig ) {
+            foreach($this->config as $driver => $checkConfig) {
                 // check if multiple or just one
                 if (is_array($checkConfig)) {
-                    foreach( $checkConfig as $key => $config ) {
-                        $instance = $this->createInstance( $driver, $config );
+                    foreach($checkConfig as $key => $config) {
+                        $instance = $this->createInstance($driver, $config);
                         $instance->setInstanceName(is_string($key) ? $key : $config);
                         $this->checks[] = $instance;
                     }
@@ -156,8 +156,16 @@ class HealthCheckManager extends Manager
         return $check->check();
     }
 
+    public function hasCheck($checkName)
+    {
+        return !!$this->getHealthCheckByName($checkName); 
+    }
+
     public function __invoke($checkName=null)
     {
-        return $checkName ? $this->checkOneByName($checkName) : $this->checkAll();
+        if($checkName) {
+            return $this->checkOneByName($checkName);
+        }
+        return $this->checkAll();
     }
 }

@@ -5,7 +5,6 @@ namespace NpmWeb\LaravelHealthCheck\Checks;
 use Closure;
 use Exception;
 use League\Flysystem\FileSystem;
-use Log;
 
 // supported adapters/drivers
 use League\Flysystem\Adapter\Ftp as FtpAdapter;
@@ -45,25 +44,17 @@ class FlysystemHealthCheck extends AbstractHealthCheck
             $config = $fsConfig;
         }
 
-        Log::debug(__METHOD__.':: instantiating a Flysystem for '.$driver);
         $adapter = $this->getAdapterForDriver($driver, $config);
 
         return new Filesystem ( $adapter );
     }
 
-    public function getType()
-    {
-        return 'flysystem';
-    }
-
     public function check()
     {
-        Log::debug(__METHOD__.'()');
         try {
             $files = $this->flysystem->listContents();
             return ( $files !== false && !empty($files));
         } catch( Exception $e ) {
-            Log::error(__METHOD__.':: Exception getting files: '.$e->getMessage()) ;
             return false;
         }
     }
